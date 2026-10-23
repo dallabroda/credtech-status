@@ -14,15 +14,23 @@ jobs:
     steps:
       - name: Checar endereços
         run: |
+          # Cada item: URL, ou URL|texto que a resposta precisa conter (além do HTTP 200)
           fail=0
-          for url in \
-            https://credtechdigital.com.br/ \
-            https://chat.credtechdigital.com.br/app/login \
-            https://chat.credtechdigital.com.br/leticia-bot/health \
-            https://hub.credtechdigital.com.br/ \
-            https://hub.credtechdigital.com.br/bridge/health; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 10 "$url")
-            echo "$code $url"
-            [ "$code" = "200" ] || fail=1
+          for item in \
+            "https://credtechdigital.com.br/" \
+            "https://chat.credtechdigital.com.br/app/login" \
+            "https://chat.credtechdigital.com.br/leticia-bot/health" \
+            "https://hub.credtechdigital.com.br/" \
+            "https://hub.credtechdigital.com.br/api/method/ping|pong" \
+            "https://hub.credtechdigital.com.br/bridge/health"; do
+            url="${item%%|*}"; expect=""
+            [ "$url" != "$item" ] && expect="${item#*|}"
+            code=$(curl -s -o body.txt -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 10 "$url" || true)
+            if [ "$code" = "200" ] && { [ -z "$expect" ] || grep -q "$expect" body.txt; }; then
+              echo "ok    $code $url"
+            else
+              echo "FALHA $code $url ${expect:+(esperado: $expect)}"
+              fail=1
+            fi
           done
           exit $fail
