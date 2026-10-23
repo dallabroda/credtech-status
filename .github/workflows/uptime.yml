@@ -1,0 +1,28 @@
+# Monitoramento público dos endereços da CredTech. Se algum falhar, o job falha
+# e o GitHub envia e-mail ao dono do repositório.
+name: uptime
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checar endereços
+        run: |
+          fail=0
+          for url in \
+            https://credtechdigital.com.br/ \
+            https://chat.credtechdigital.com.br/app/login \
+            https://chat.credtechdigital.com.br/leticia-bot/health \
+            https://hub.credtechdigital.com.br/ \
+            https://hub.credtechdigital.com.br/bridge/health; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 10 "$url")
+            echo "$code $url"
+            [ "$code" = "200" ] || fail=1
+          done
+          exit $fail
