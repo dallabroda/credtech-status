@@ -1,10 +1,12 @@
 # Monitoramento público dos endereços da CredTech. Se algum falhar, o job falha
 # e o GitHub envia e-mail ao dono do repositório.
+# De hora em hora desde 11/11/2026: o de 5 em 5 min roda no servidor (credtech: infra/scripts/uptime.sh);
+# este aqui existe para avisar quando o servidor inteiro cai (e o cron dele junto).
 name: uptime
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 jobs:
